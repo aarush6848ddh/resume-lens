@@ -1,12 +1,12 @@
 # resume-lens
 
-A personal learning project built to get hands-on experience with LangChain and agentic AI workflows. The idea was to build something I'd actually use - a tool that compares a resume PDF against a job description and returns a structured analysis - while learning the core LangChain primitives from scratch.
+A personal learning project built to get hands-on experience with LangChain and agentic AI workflows. The idea was to build something I'd actually use, a tool that compares a resume PDF against a job description and returns a structured analysis while learning the core LangChain primitives from scratch.
 
 ## What it does
 
 Give it a resume PDF and a job posting URL, and it:
 
-1. Scrapes the job description directly from the URL - no copy-pasting
+1. Scrapes the job description directly from the URL, no copy-pasting
 2. Compares your resume against the job description using Gemini
 3. Returns a formatted scoring report with:
 
@@ -79,4 +79,4 @@ scrape_job_posting → run_analysis chain → format_scoring_report
 
 ### Why tools?
 
-A LangChain chain is a fixed pipeline - it always runs the same steps in the same order. A tool is a callable function exposed to the model so it can decide when to invoke it. This is the foundation of agentic systems like LangGraph, where agents choose which tools to call at runtime based on tool descriptions.
+A LangChain chain is a fixed pipeline, it always runs the same steps in the same order. A tool is a callable function exposed to the model so it can decide when to invoke it. This is the foundation of agentic systems like LangGraph, where agents choose which tools to call at runtime based on tool descriptions.
