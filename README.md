@@ -4,7 +4,11 @@ A personal learning project built to get hands-on experience with LangChain and 
 
 ## What it does
 
-Give it a resume PDF and a job description, and it returns:
+Give it a resume PDF and a job posting URL, and it:
+
+1. Scrapes the job description directly from the URL — no copy-pasting
+2. Compares your resume against the job description using Gemini
+3. Returns a formatted scoring report with:
 
 - **Match score** — a 0–100 rating of how well your resume fits the role
 - **Matching skills** — skills you have that the job is looking for
@@ -14,24 +18,26 @@ Give it a resume PDF and a job description, and it returns:
 ## Example output
 
 ```
-Match Score: 88
-Matching Skills: ['Python', 'Machine Learning', 'Cloud Computing', 'Data Science', 'AWS']
-Missing Skills: ['GCP', 'Experience with truly large datasets']
-Suggestions for Improvement: [
-  "Quantify your dataset scale...",
-  "Address GCP experience if applicable...",
+Match score: 92
+Matching Skills : ['Python', 'Java', 'React', 'Docker', 'PostgreSQL', 'CI/CD', ...]
+Missing Skills: ['Ruby', 'Scala', 'Go']
+Suggested Fixes: [
+  "Quantify impact in your internship with specific metrics...",
+  "Explicitly mention code reviews and pull requests...",
+  "Add a summary section highlighting learning agility...",
   ...
 ]
 ```
 
 ## Tech stack
 
-- **Python 3.11**
-- **LangChain** — chains, prompt templates, output parsers
+- **Python 3.9**
+- **LangChain** — chains, prompt templates, output parsers, tools
 - **langchain-google-genai** — Gemini integration via LangChain
-- **Google Gemini 2.0 Flash** — the underlying language model
+- **Google Gemini 2.5 Flash** — the underlying language model
 - **pypdf** — PDF text extraction
 - **Pydantic** — structured output validation
+- **beautifulsoup4** — HTML parsing for the job scraper tool
 
 ## Project structure
 
@@ -42,7 +48,8 @@ resume-lens/
 ├── model.py         # Initializes the Gemini chat model
 ├── parser.py        # Pydantic model + output parser for structured results
 ├── chain.py         # Assembles the LCEL chain and runs the analysis
-├── main.py          # Entry point
+├── tools.py         # Two LangChain tools: job scraper and report formatter
+├── main.py          # Entry point — wires tools and chain together
 └── requirements.txt # Python dependencies
 ```
 
@@ -56,18 +63,20 @@ resume-lens/
 | LCEL chains | `chain.py` — `prompt | model | parser` pipe syntax |
 | Output Parsers | `parser.py` — `PydanticOutputParser` returns a typed Python object |
 | Pydantic Models | `parser.py` — `ResumeAnalysis` defines the output schema |
+| Tools | `tools.py` — `@tool` decorator exposes functions the model can invoke |
 
 ## How it works
 
-The core is a three-step LangChain chain built with LCEL (LangChain Expression Language):
+The full pipeline has two stages: tools and a chain.
 
 ```
-prompt | model | parser
+scrape_job_posting → run_analysis chain → format_scoring_report
 ```
 
-1. **`loader.py`** extracts all text from the resume PDF using `PyPDFLoader`
-2. **`prompt.py`** formats the resume text, job description, and output format instructions into a structured chat prompt
-3. **`model.py`** sends the prompt to Gemini and gets a response
-4. **`parser.py`** parses Gemini's response into a typed `ResumeAnalysis` Python object using Pydantic
+1. **`tools.py` / `scrape_job_posting`** fetches the job posting URL and extracts the page text using `WebBaseLoader`
+2. **`chain.py` / `run_analysis`** runs the LCEL chain — loads the resume PDF, formats the prompt, calls Gemini, and parses the response into a `ResumeAnalysis` Pydantic object
+3. **`tools.py` / `format_scoring_report`** takes the structured analysis, serialized as a JSON string, and formats it into a clean human-readable report
 
-The `|` pipe operator connects each step — the output of one becomes the input of the next, with no glue code required.
+### Why tools?
+
+A LangChain chain is a fixed pipeline — it always runs the same steps in the same order. A tool is a callable function exposed to the model so it can decide when to invoke it. This is the foundation of agentic systems like LangGraph, where agents choose which tools to call at runtime based on tool descriptions.
