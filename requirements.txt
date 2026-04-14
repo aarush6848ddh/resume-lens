@@ -1,6 +1,8 @@
 langchain
 langchain-google-genai
 langchain-community
-pypdf
 python-dotenv
 beautifulsoup4
+langchain-chroma
+sentence-transformers
+langchain-huggingface
